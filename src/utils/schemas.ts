@@ -74,6 +74,51 @@ export const DeleteQuerySchema = z.object({
     })
 });
 
+export const ResizeModeSchema = z.enum(['fit', 'fill', 'force']).openapi({
+  example: 'fit',
+  description:
+    'Resize mode: fit (preserve aspect ratio, no crop), fill (preserve aspect ratio, crop overflow), force (ignore aspect ratio)'
+});
+
+export const ResizeQuerySchema = z.object({
+  width: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(8192))
+    .optional()
+    .openapi({
+      param: {
+        name: 'width',
+        in: 'query'
+      },
+      example: '1920',
+      description: 'Target width in pixels (max 8192)'
+    }),
+  height: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(8192))
+    .optional()
+    .openapi({
+      param: {
+        name: 'height',
+        in: 'query'
+      },
+      example: '1080',
+      description: 'Target height in pixels (max 8192)'
+    }),
+  mode: ResizeModeSchema.optional()
+    .default('fit')
+    .openapi({
+      param: {
+        name: 'mode',
+        in: 'query'
+      }
+    })
+});
+
 /**
  * Path parameters
  */
