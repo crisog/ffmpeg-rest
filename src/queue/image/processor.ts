@@ -9,6 +9,7 @@ import { dirname, basename, extname } from 'path';
 import { env } from '~/config/env';
 import { logger } from '~/config/logger';
 import { uploadToS3 } from '~/utils/storage';
+import { getMimeType } from '~/utils/mime-types';
 
 const execFileAsync = promisify(execFile);
 
@@ -81,20 +82,6 @@ function buildResizeFilter(width: number | undefined, height: number | undefined
     default:
       throw new Error(`Unknown resize mode: ${mode}`);
   }
-}
-
-function getMimeType(ext: string): string {
-  const mimeTypes: Record<string, string> = {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp',
-    '.bmp': 'image/bmp',
-    '.tiff': 'image/tiff',
-    '.tif': 'image/tiff'
-  };
-  return mimeTypes[ext.toLowerCase()] ?? 'application/octet-stream';
 }
 
 export async function processImageResize(job: Job<ImageResizeJobData>): Promise<JobResult> {

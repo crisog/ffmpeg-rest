@@ -3,28 +3,7 @@ import { imageToJpgRoute, imageToJpgUrlRoute, imageResizeRoute, imageResizeUrlRo
 import { JobType } from '~/queue';
 import { env } from '~/config/env';
 import { processMediaJob, getOutputFilename } from '~/utils/job-handler';
-
-function getExtension(filename: string): string {
-  const match = filename.match(/\.([^.]+)$/);
-  if (!match || !match[1]) {
-    return 'png';
-  }
-  return match[1].toLowerCase();
-}
-
-function getMimeType(ext: string): string {
-  const mimeTypes: Record<string, string> = {
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    webp: 'image/webp',
-    bmp: 'image/bmp',
-    tiff: 'image/tiff',
-    tif: 'image/tiff'
-  };
-  return mimeTypes[ext] ?? 'application/octet-stream';
-}
+import { getMimeType, getExtensionFromFilename } from '~/utils/mime-types';
 
 export function registerImageRoutes(app: OpenAPIHono) {
   app.openapi(imageToJpgRoute, async (c) => {
@@ -108,7 +87,7 @@ export function registerImageRoutes(app: OpenAPIHono) {
         return c.json({ error: 'Fill mode requires both width and height' }, 400);
       }
 
-      const ext = getExtension(file.name);
+      const ext = getExtensionFromFilename(file.name);
 
       const result = await processMediaJob({
         file,
@@ -159,7 +138,7 @@ export function registerImageRoutes(app: OpenAPIHono) {
         return c.json({ error: 'Fill mode requires both width and height' }, 400);
       }
 
-      const ext = getExtension(file.name);
+      const ext = getExtensionFromFilename(file.name);
 
       const result = await processMediaJob({
         file,
