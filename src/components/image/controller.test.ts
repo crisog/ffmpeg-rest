@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createApp } from '~/app';
-import { existsSync, mkdirSync, rmSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
 import { Worker } from 'bullmq';
@@ -103,7 +103,9 @@ describe('Image Controller', () => {
       expect(res.headers.get('content-disposition')).toContain('resize-test.png');
 
       const arrayBuffer = await res.arrayBuffer();
-      expect(arrayBuffer.byteLength).toBeGreaterThan(0);
+      const dimensions = getImageDimensions(arrayBuffer);
+      expect(dimensions.width).toBe(320);
+      expect(dimensions.height).toBe(240);
     });
 
     it('should resize image with height parameter', async () => {
@@ -122,6 +124,11 @@ describe('Image Controller', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers.get('content-type')).toBe('image/png');
+
+      const arrayBuffer = await res.arrayBuffer();
+      const dimensions = getImageDimensions(arrayBuffer);
+      expect(dimensions.width).toBe(320);
+      expect(dimensions.height).toBe(240);
     });
 
     it('should resize image with both dimensions and mode', async () => {
@@ -140,6 +147,11 @@ describe('Image Controller', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers.get('content-type')).toBe('image/png');
+
+      const arrayBuffer = await res.arrayBuffer();
+      const dimensions = getImageDimensions(arrayBuffer);
+      expect(dimensions.width).toBe(200);
+      expect(dimensions.height).toBe(200);
     });
 
     it('should resize with fill mode', async () => {
@@ -158,6 +170,11 @@ describe('Image Controller', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers.get('content-type')).toBe('image/png');
+
+      const arrayBuffer = await res.arrayBuffer();
+      const dimensions = getImageDimensions(arrayBuffer);
+      expect(dimensions.width).toBe(200);
+      expect(dimensions.height).toBe(200);
     });
 
     it('should return 400 when no dimensions specified', async () => {
@@ -230,4 +247,24 @@ function createTestPngFile(outputPath: string, width = 320, height = 240): void 
   execSync(`ffmpeg -f lavfi -i color=c=blue:s=${width}x${height}:d=1 -frames:v 1 -y "${outputPath}"`, {
     stdio: 'pipe'
   });
+}
+
+function getImageDimensions(buffer: ArrayBuffer): { width: number; height: number } {
+  const tempPath = path.join(TEST_DIR, `temp-${Date.now()}.png`);
+  if (!existsSync(TEST_DIR)) {
+    mkdirSync(TEST_DIR, { recursive: true });
+  }
+  writeFileSync(tempPath, Buffer.from(buffer));
+  try {
+    const output = execSync(
+      `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json "${tempPath}"`
+    ).toString();
+    const data = JSON.parse(output);
+    return {
+      width: data.streams[0].width,
+      height: data.streams[0].height
+    };
+  } finally {
+    rmSync(tempPath, { force: true });
+  }
 }
