@@ -85,7 +85,8 @@ export function registerAudioRoutes(app: OpenAPIHono) {
         jobData: ({ inputPath, outputPath }) => ({
           inputPath,
           outputPath,
-          quality: 2
+          quality: 2,
+          uploadToS3: true
         })
       });
 
@@ -118,7 +119,8 @@ export function registerAudioRoutes(app: OpenAPIHono) {
         outputExtension: 'wav',
         jobData: ({ inputPath, outputPath }) => ({
           inputPath,
-          outputPath
+          outputPath,
+          uploadToS3: true
         })
       });
 

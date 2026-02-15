@@ -533,7 +533,8 @@ describe('Video Processors - S3 Mode', () => {
         outputPath,
         crf: 23,
         preset: 'medium' as const,
-        smartCopy: true
+        smartCopy: true,
+        uploadToS3: true
       }
     } as Job<VideoToMp4JobData>;
 
@@ -571,7 +572,8 @@ describe('Video Processors - S3 Mode', () => {
       data: {
         inputPath,
         outputPath,
-        mono: true
+        mono: true,
+        uploadToS3: true
       }
     } as Job<VideoExtractAudioJobData>;
 
@@ -611,7 +613,8 @@ describe('Video Processors - S3 Mode', () => {
         outputDir,
         fps: 1,
         format: 'png' as const,
-        compress: 'zip' as const
+        compress: 'zip' as const,
+        uploadToS3: true
       }
     } as Job<VideoExtractFramesJobData>;
 

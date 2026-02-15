@@ -7,13 +7,15 @@ export const VideoToMp4JobDataSchema = z.object({
   preset: z
     .enum(['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'])
     .default('medium'),
-  smartCopy: z.boolean().default(true)
+  smartCopy: z.boolean().default(true),
+  uploadToS3: z.boolean().default(false)
 });
 
 export const VideoExtractAudioJobDataSchema = z.object({
   inputPath: z.string(),
   outputPath: z.string(),
-  mono: z.boolean().default(true)
+  mono: z.boolean().default(true),
+  uploadToS3: z.boolean().default(false)
 });
 
 export const VideoExtractFramesJobDataSchema = z.object({
@@ -22,7 +24,8 @@ export const VideoExtractFramesJobDataSchema = z.object({
   fps: z.number().default(1),
   format: z.enum(['png', 'jpg']).default('png'),
   quality: z.number().min(1).max(31).optional(),
-  compress: z.enum(['zip', 'gzip']).optional()
+  compress: z.enum(['zip', 'gzip']).optional(),
+  uploadToS3: z.boolean().default(false)
 });
 
 export type VideoToMp4JobData = z.infer<typeof VideoToMp4JobDataSchema>;

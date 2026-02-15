@@ -6,7 +6,6 @@ import { promisify } from 'util';
 import { existsSync } from 'fs';
 import { mkdir, rm } from 'fs/promises';
 import { dirname, basename, extname } from 'path';
-import { env } from '~/config/env';
 import { logger } from '~/config/logger';
 import { uploadToS3 } from '~/utils/storage';
 import { getMimeType } from '~/utils/mime-types';
@@ -38,7 +37,7 @@ export async function processImageToJpg(job: Job<ImageToJpgJobData>): Promise<Jo
     const ffmpegDuration = Date.now() - ffmpegStart;
     logger.info({ jobId: job.id, duration: ffmpegDuration }, 'FFmpeg conversion completed');
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const uploadStart = Date.now();
       const { url } = await uploadToS3(outputPath, 'image/jpeg', basename(outputPath));
       const uploadDuration = Date.now() - uploadStart;
@@ -116,7 +115,7 @@ export async function processImageResize(job: Job<ImageResizeJobData>): Promise<
     const ffmpegDuration = Date.now() - ffmpegStart;
     logger.info({ jobId: job.id, duration: ffmpegDuration, filter }, 'FFmpeg resize completed');
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const ext = extname(outputPath);
       const mimeType = getMimeType(ext);
       const uploadStart = Date.now();

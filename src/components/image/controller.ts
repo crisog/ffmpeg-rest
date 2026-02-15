@@ -54,7 +54,8 @@ export function registerImageRoutes(app: OpenAPIHono) {
         jobData: ({ inputPath, outputPath }) => ({
           inputPath,
           outputPath,
-          quality: 2
+          quality: 2,
+          uploadToS3: true
         })
       });
 
@@ -149,7 +150,8 @@ export function registerImageRoutes(app: OpenAPIHono) {
           outputPath,
           width,
           height,
-          mode
+          mode,
+          uploadToS3: true
         })
       });
 

@@ -435,7 +435,8 @@ describe('Image Processors - S3 Mode', () => {
       data: {
         inputPath,
         outputPath,
-        quality: 2
+        quality: 2,
+        uploadToS3: true
       }
     } as Job<ImageToJpgJobData>;
 
@@ -474,7 +475,8 @@ describe('Image Processors - S3 Mode', () => {
         inputPath,
         outputPath,
         width: 320,
-        mode: 'fit'
+        mode: 'fit',
+        uploadToS3: true
       }
     } as Job<ImageResizeJobData>;
 

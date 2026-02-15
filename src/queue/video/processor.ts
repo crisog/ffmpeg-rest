@@ -7,7 +7,6 @@ import { existsSync } from 'fs';
 import { mkdir, rm } from 'fs/promises';
 import { dirname, basename } from 'path';
 import path from 'path';
-import { env } from '~/config/env';
 import { uploadToS3 } from '~/utils/storage';
 
 const execFileAsync = promisify(execFile);
@@ -97,7 +96,7 @@ export async function processVideoToMp4(job: Job<VideoToMp4JobData>): Promise<Jo
       );
     }
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const { url } = await uploadToS3(outputPath, 'video/mp4', basename(outputPath));
       await rm(outputPath, { force: true });
       return {
@@ -143,7 +142,7 @@ export async function processVideoExtractAudio(job: Job<VideoExtractAudioJobData
 
     await execFileAsync('ffmpeg', args, { timeout: PROCESSING_TIMEOUT });
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const { url } = await uploadToS3(outputPath, 'audio/wav', basename(outputPath));
       await rm(outputPath, { force: true });
       return {
@@ -219,7 +218,7 @@ export async function processVideoExtractFrames(job: Job<VideoExtractFramesJobDa
         output.on('error', reject);
       });
 
-      if (env.STORAGE_MODE === 's3') {
+      if (job.data.uploadToS3) {
         const { url } = await uploadToS3(archivePath, 'application/zip', basename(archivePath));
         await rm(dirname(outputDir), { recursive: true, force: true });
         return {
@@ -245,7 +244,7 @@ export async function processVideoExtractFrames(job: Job<VideoExtractFramesJobDa
         [path.basename(outputDir)]
       );
 
-      if (env.STORAGE_MODE === 's3') {
+      if (job.data.uploadToS3) {
         const { url } = await uploadToS3(archivePath, 'application/gzip', basename(archivePath));
         await rm(dirname(outputDir), { recursive: true, force: true });
         return {

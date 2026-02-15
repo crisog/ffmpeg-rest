@@ -342,7 +342,8 @@ describe('Audio Processors - S3 Mode', () => {
       data: {
         inputPath,
         outputPath,
-        quality: 2
+        quality: 2,
+        uploadToS3: true
       }
     } as Job<AudioToMp3JobData>;
 
@@ -379,7 +380,8 @@ describe('Audio Processors - S3 Mode', () => {
     const job = {
       data: {
         inputPath,
-        outputPath
+        outputPath,
+        uploadToS3: true
       }
     } as Job<AudioToWavJobData>;
 

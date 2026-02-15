@@ -6,7 +6,6 @@ import { promisify } from 'util';
 import { existsSync } from 'fs';
 import { mkdir, rm } from 'fs/promises';
 import { dirname, basename } from 'path';
-import { env } from '~/config/env';
 import { uploadToS3 } from '~/utils/storage';
 
 const execFileAsync = promisify(execFile);
@@ -33,7 +32,7 @@ export async function processAudioToMp3(job: Job<AudioToMp3JobData>): Promise<Jo
       { timeout: PROCESSING_TIMEOUT }
     );
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const { url } = await uploadToS3(outputPath, 'audio/mpeg', basename(outputPath));
       await rm(outputPath, { force: true });
       return {
@@ -73,7 +72,7 @@ export async function processAudioToWav(job: Job<AudioToWavJobData>): Promise<Jo
       timeout: PROCESSING_TIMEOUT
     });
 
-    if (env.STORAGE_MODE === 's3') {
+    if (job.data.uploadToS3) {
       const { url } = await uploadToS3(outputPath, 'audio/wav', basename(outputPath));
       await rm(outputPath, { force: true });
       return {
