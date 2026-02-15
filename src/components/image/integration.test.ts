@@ -98,6 +98,48 @@ describe('Image Conversion Integration - S3 Mode', () => {
     expect(headResult.ContentType).toBe('image/jpeg');
   }, 60000);
 
+  it('should convert PNG to JPG and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testImagePath = path.join(__dirname, '../../../test-image.png');
+    const imageBuffer = await readFile(testImagePath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(imageBuffer)], { type: 'image/png' });
+    formData.append('file', blob, 'test-image.png');
+
+    const response = await fetch(`${apiUrl}/image/jpg`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/jpeg');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
+  it('should resize image and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testImagePath = path.join(__dirname, '../../../test-image.png');
+    const imageBuffer = await readFile(testImagePath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(imageBuffer)], { type: 'image/png' });
+    formData.append('file', blob, 'test-image.png');
+
+    const response = await fetch(`${apiUrl}/image/resize?width=200`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
   it('should reject invalid file', async () => {
     const apiUrl = getApiUrl('s3');
     const formData = new FormData();

@@ -140,6 +140,27 @@ describe('Video Processing Integration - S3 Mode', () => {
     expect(headResult.ContentType).toBe('video/mp4');
   }, 60000);
 
+  it('should convert video to MP4 and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/mp4`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('video/mp4');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
   it('should extract audio to WAV and upload to S3', async () => {
     const apiUrl = getApiUrl('s3');
     const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
@@ -170,6 +191,27 @@ describe('Video Processing Integration - S3 Mode', () => {
     expect(headResult.ContentType).toBe('audio/wav');
   }, 60000);
 
+  it('should extract audio to WAV and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/audio`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('audio/wav');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
   it('should extract frames and upload archive to S3', async () => {
     const apiUrl = getApiUrl('s3');
     const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
@@ -198,6 +240,27 @@ describe('Video Processing Integration - S3 Mode', () => {
       })
     );
     expect(headResult.ContentType).toBe('application/zip');
+  }, 60000);
+
+  it('should extract frames and return archive from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/frames?fps=1&compress=zip`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('application/zip');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
   }, 60000);
 
   it('should reject invalid file for video conversion', async () => {

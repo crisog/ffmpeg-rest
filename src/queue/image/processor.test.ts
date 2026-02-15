@@ -462,6 +462,31 @@ describe('Image Processors - S3 Mode', () => {
     }
   });
 
+  it('should keep JPG on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processImageToJpg } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local.png');
+    const outputPath = path.join(TEST_DIR, 'output-s3-local.jpg');
+
+    createTestPngFile(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        quality: 2,
+        uploadToS3: false
+      }
+    } as Job<ImageToJpgJobData>;
+
+    const result = await processImageToJpg(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
+  });
+
   it('should upload resized image to S3 and return URL', async () => {
     const { processImageResize } = await import('./processor');
 
@@ -500,5 +525,31 @@ describe('Image Processors - S3 Mode', () => {
       );
       expect(headResult.ContentType).toBe('image/png');
     }
+  });
+
+  it('should keep resized image on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processImageResize } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-resize-s3-local.png');
+    const outputPath = path.join(TEST_DIR, 'resized-s3-local.png');
+
+    createTestPngFile(inputPath, 640, 480);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        width: 320,
+        mode: 'fit',
+        uploadToS3: false
+      }
+    } as Job<ImageResizeJobData>;
+
+    const result = await processImageResize(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
   });
 });

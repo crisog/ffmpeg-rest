@@ -119,6 +119,27 @@ describe('Audio Conversion Integration - S3 Mode', () => {
     expect(headResult.ContentType).toBe('audio/mpeg');
   }, 60000);
 
+  it('should convert WAV to MP3 and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testAudioPath = path.join(__dirname, '../../../test-audio.wav');
+    const audioBuffer = await readFile(testAudioPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/wav' });
+    formData.append('file', blob, 'test-audio.wav');
+
+    const response = await fetch(`${apiUrl}/audio/mp3`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('audio/mpeg');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
   it('should convert MP3 to WAV and upload to S3', async () => {
     const apiUrl = getApiUrl('s3');
     const testAudioPath = path.join(__dirname, '../../../test-audio.wav');
@@ -147,6 +168,27 @@ describe('Audio Conversion Integration - S3 Mode', () => {
       })
     );
     expect(headResult.ContentType).toBe('audio/wav');
+  }, 60000);
+
+  it('should convert WAV to WAV and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testAudioPath = path.join(__dirname, '../../../test-audio.wav');
+    const audioBuffer = await readFile(testAudioPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/wav' });
+    formData.append('file', blob, 'test-audio.wav');
+
+    const response = await fetch(`${apiUrl}/audio/wav`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('audio/wav');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
   }, 60000);
 
   it('should reject invalid file for MP3 conversion', async () => {

@@ -369,6 +369,31 @@ describe('Audio Processors - S3 Mode', () => {
     }
   });
 
+  it('should keep MP3 on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processAudioToMp3 } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local.wav');
+    const outputPath = path.join(TEST_DIR, 'output-s3-local.mp3');
+
+    createTestWavFile(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        quality: 2,
+        uploadToS3: false
+      }
+    } as Job<AudioToMp3JobData>;
+
+    const result = await processAudioToMp3(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
+  });
+
   it('should upload WAV to S3 and return URL', async () => {
     const { processAudioToWav } = await import('./processor');
 
@@ -405,5 +430,29 @@ describe('Audio Processors - S3 Mode', () => {
       );
       expect(headResult.ContentType).toBe('audio/wav');
     }
+  });
+
+  it('should keep WAV on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processAudioToWav } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local.mp3');
+    const outputPath = path.join(TEST_DIR, 'output-s3-local.wav');
+
+    createTestMp3File(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        uploadToS3: false
+      }
+    } as Job<AudioToWavJobData>;
+
+    const result = await processAudioToWav(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
   });
 });

@@ -560,6 +560,33 @@ describe('Video Processors - S3 Mode', () => {
     }
   });
 
+  it('should keep MP4 on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processVideoToMp4 } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local.avi');
+    const outputPath = path.join(TEST_DIR, 'output-s3-local.mp4');
+
+    createTestAviFile(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        crf: 23,
+        preset: 'medium' as const,
+        smartCopy: true,
+        uploadToS3: false
+      }
+    } as Job<VideoToMp4JobData>;
+
+    const result = await processVideoToMp4(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
+  });
+
   it('should upload extracted audio to S3 and return URL', async () => {
     const { processVideoExtractAudio } = await import('./processor');
 
@@ -597,6 +624,31 @@ describe('Video Processors - S3 Mode', () => {
       );
       expect(headResult.ContentType).toBe('audio/wav');
     }
+  });
+
+  it('should keep extracted audio on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processVideoExtractAudio } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local-audio.avi');
+    const outputPath = path.join(TEST_DIR, 'output-s3-local.wav');
+
+    createTestAviFile(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputPath,
+        mono: true,
+        uploadToS3: false
+      }
+    } as Job<VideoExtractAudioJobData>;
+
+    const result = await processVideoExtractAudio(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(outputPath);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(outputPath)).toBe(true);
   });
 
   it('should upload extracted frames archive to S3 and return URL', async () => {
@@ -638,5 +690,32 @@ describe('Video Processors - S3 Mode', () => {
       );
       expect(headResult.ContentType).toBe('application/zip');
     }
+  });
+
+  it('should keep extracted frames archive on local disk when uploadToS3 is false in S3 mode', async () => {
+    const { processVideoExtractFrames } = await import('./processor');
+
+    const inputPath = path.join(FIXTURES_DIR, 'test-s3-local-frames.avi');
+    const outputDir = path.join(TEST_DIR, 'frames-s3-local');
+
+    createTestAviFile(inputPath);
+
+    const job = {
+      data: {
+        inputPath,
+        outputDir,
+        fps: 1,
+        format: 'png' as const,
+        compress: 'zip' as const,
+        uploadToS3: false
+      }
+    } as Job<VideoExtractFramesJobData>;
+
+    const result = await processVideoExtractFrames(job);
+
+    expect(result.success).toBe(true);
+    expect(result.outputPath).toBe(`${outputDir}.zip`);
+    expect(result.outputUrl).toBeUndefined();
+    expect(existsSync(`${outputDir}.zip`)).toBe(true);
   });
 });

@@ -5,7 +5,13 @@ import { S3Client, CreateBucketCommand } from '@aws-sdk/client-s3';
 import path from 'path';
 
 const CUSTOM_IMAGE_NAME = process.env['FFMPEG_REST_TEST_IMAGE'];
-const IMAGE_NAME = CUSTOM_IMAGE_NAME ?? 'ffmpeg-rest-test';
+const CUSTOM_IMAGE_PLATFORM = process.env['FFMPEG_REST_TEST_PLATFORM']?.trim() || undefined;
+const DEFAULT_AUTO_IMAGE_PLATFORM = 'linux/amd64';
+const IMAGE_PLATFORM = CUSTOM_IMAGE_NAME
+  ? CUSTOM_IMAGE_PLATFORM
+  : (CUSTOM_IMAGE_PLATFORM ?? DEFAULT_AUTO_IMAGE_PLATFORM);
+const RUN_IMAGE_ID = `${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
+const IMAGE_NAME = CUSTOM_IMAGE_NAME ?? `ffmpeg-rest-test-${RUN_IMAGE_ID}`;
 const REDIS_ALIAS = 'redis';
 const LOCALSTACK_ALIAS = 'localstack';
 
@@ -201,8 +207,16 @@ async function performSetup(state: EnvironmentState): Promise<IntegrationSetupRe
 
   await ensureImageBuilt();
 
-  console.log(`[${state.mode}] Starting application container...`);
-  state.appContainer = await new GenericContainer(IMAGE_NAME)
+  console.log(
+    `[${state.mode}] Starting application container${IMAGE_PLATFORM ? ` (platform=${IMAGE_PLATFORM})` : ''}...`
+  );
+
+  const appContainer = new GenericContainer(IMAGE_NAME);
+  if (IMAGE_PLATFORM) {
+    appContainer.withPlatform(IMAGE_PLATFORM);
+  }
+
+  state.appContainer = await appContainer
     .withNetwork(state.network)
     .withEnvironment(environment)
     .withExposedPorts(3000)
@@ -258,10 +272,14 @@ async function ensureImageBuilt() {
   }
 
   if (!imageBuildPromise) {
-    console.log('Building application image...');
-    imageBuildPromise = GenericContainer.fromDockerfile(path.join(__dirname, '../..'))
-      .withPlatform('linux/amd64')
-      .build(IMAGE_NAME, { deleteOnExit: false })
+    const imageBuilder = GenericContainer.fromDockerfile(path.join(__dirname, '../..')).withBuildkit();
+    if (IMAGE_PLATFORM) {
+      imageBuilder.withPlatform(IMAGE_PLATFORM);
+    }
+
+    console.log(`Building application image: ${IMAGE_NAME}${IMAGE_PLATFORM ? ` (platform=${IMAGE_PLATFORM})` : ''}...`);
+    imageBuildPromise = imageBuilder
+      .build(IMAGE_NAME, { deleteOnExit: true })
       .then(() => {
         imageBuilt = true;
       })
