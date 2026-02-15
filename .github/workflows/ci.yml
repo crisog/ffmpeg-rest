@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FFMPEG_REST_TEST_IMAGE: ffmpeg-rest-test:ci
+      FFMPEG_REST_TEST_PLATFORM: linux/amd64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -54,6 +55,7 @@ jobs:
         with:
           context: .
           tags: ffmpeg-rest-test:ci
+          platforms: linux/amd64
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
