@@ -44,13 +44,13 @@ src/
 ├── components/               # Feature modules (controller + schema pairs)
 │   ├── api/                  # GET /, GET /endpoints
 │   ├── audio/                # POST /audio/mp3, /audio/wav, + /url variants
-│   ├── video/                # POST /video/mp4, /video/audio, /video/frames, + /url variants
+│   ├── video/                # POST /video/mp4, /video/audio, /video/frames, /video/gif, + /url variants
 │   ├── image/                # POST /image/jpg, /image/resize, + /url variants
 │   └── media/                # POST /media/info (ffprobe)
 ├── queue/                    # Job processing layer
 │   ├── index.ts              # Queue setup, job types enum, addJob(), validateJobResult()
 │   ├── audio/                # processAudioToMp3, processAudioToWav
-│   ├── video/                # processVideoToMp4, processVideoExtractAudio, processVideoExtractFrames
+│   ├── video/                # processVideoToMp4, processVideoExtractAudio, processVideoExtractFrames, processVideoToGif
 │   ├── image/                # processImageToJpg, processImageResize
 │   └── media/                # processMediaProbe
 ├── utils/
@@ -67,6 +67,7 @@ src/
 ```
 
 Each feature area follows the same structure:
+
 - `components/<domain>/schemas.ts` — Route definitions via `@hono/zod-openapi` `createRoute()`
 - `components/<domain>/controller.ts` — Route handler implementation
 - `queue/<domain>/schemas.ts` — Job data Zod schemas
@@ -76,20 +77,20 @@ Each feature area follows the same structure:
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 22+, TypeScript (ESM) |
-| HTTP framework | Hono via `@hono/node-server` |
-| API spec | `@hono/zod-openapi` (OpenAPI 3.0/3.1) |
-| Validation | Zod |
-| Job queue | BullMQ + ioredis (Redis) |
-| Media processing | FFmpeg/FFprobe via `child_process.execFile` |
-| Object storage | `@aws-sdk/client-s3` |
-| Logging | Pino |
-| Build | esbuild (bundles server and worker separately) |
-| Testing | Vitest + testcontainers |
-| Linting | ESLint (typescript-eslint strict + stylistic) + Prettier |
-| Git hooks | Husky + lint-staged |
+| Layer            | Technology                                               |
+| ---------------- | -------------------------------------------------------- |
+| Runtime          | Node.js 22+, TypeScript (ESM)                            |
+| HTTP framework   | Hono via `@hono/node-server`                             |
+| API spec         | `@hono/zod-openapi` (OpenAPI 3.0/3.1)                    |
+| Validation       | Zod                                                      |
+| Job queue        | BullMQ + ioredis (Redis)                                 |
+| Media processing | FFmpeg/FFprobe via `child_process.execFile`              |
+| Object storage   | `@aws-sdk/client-s3`                                     |
+| Logging          | Pino                                                     |
+| Build            | esbuild (bundles server and worker separately)           |
+| Testing          | Vitest + testcontainers                                  |
+| Linting          | ESLint (typescript-eslint strict + stylistic) + Prettier |
+| Git hooks        | Husky + lint-staged                                      |
 
 ---
 
@@ -133,12 +134,14 @@ FFmpeg and FFprobe must be installed and available in PATH.
 ### Two test modes
 
 **App tests** (`npm run test:app`):
+
 - Sets `TEST_MODE=app`, excludes `integration.test.ts` files
 - Global setup starts a Redis container via `@testcontainers/redis`
 - Tests run in-process: creates the Hono app directly, spins up a test BullMQ worker, makes requests via `app.request()`
 - Requires FFmpeg installed locally
 
 **Integration tests** (`npm run test:integration`):
+
 - Sets `TEST_MODE=integration`, only runs `integration.test.ts` files
 - Global setup spins up Redis, LocalStack (S3), and the app container via testcontainers
 - Tests make real HTTP requests to the containerized API
@@ -147,10 +150,12 @@ FFmpeg and FFprobe must be installed and available in PATH.
 ### Test structure
 
 Each component has:
+
 - `controller.test.ts` — App-level tests (in-process Hono + test worker)
 - `integration.test.ts` — Full end-to-end through containerized app
 
 Each processor has:
+
 - `processor.test.ts` — Unit tests with real FFmpeg, generate fixtures via `ffmpeg -f lavfi`
 
 ### Test utilities (`src/test-utils/`)

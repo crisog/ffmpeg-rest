@@ -8,6 +8,7 @@ import {
   extractFramesUrlRoute,
   downloadFrameRoute
 } from './schemas';
+import { videoToGifRoute, videoToGifUrlRoute } from './gif-schemas';
 import { JobType } from '~/queue';
 import { env } from '~/config/env';
 import { processMediaJob, getOutputFilename } from '~/utils/job-handler';
@@ -267,5 +268,77 @@ export function registerVideoRoutes(app: OpenAPIHono) {
       },
       501
     );
+  });
+
+  app.openapi(videoToGifRoute, async (c) => {
+    try {
+      const { file } = c.req.valid('form');
+      const query = c.req.valid('query');
+
+      const result = await processMediaJob({
+        file,
+        jobType: JobType.VIDEO_TO_GIF,
+        outputExtension: 'gif',
+        jobData: ({ inputPath, outputPath }) => ({
+          inputPath,
+          outputPath,
+          fps: query.fps,
+          width: query.width
+        })
+      });
+
+      if (!result.success) {
+        return c.json({ error: result.error }, 400);
+      }
+
+      if (!result.outputBuffer) {
+        return c.json({ error: 'Conversion failed' }, 400);
+      }
+
+      return c.body(new Uint8Array(result.outputBuffer), 200, {
+        'Content-Type': 'image/gif',
+        'Content-Disposition': `attachment; filename="${getOutputFilename(file.name, 'gif')}"`
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return c.json({ error: 'Processing failed', message: errorMessage }, 500);
+    }
+  });
+
+  app.openapi(videoToGifUrlRoute, async (c) => {
+    try {
+      if (env.STORAGE_MODE !== 's3') {
+        return c.json({ error: 'S3 mode not enabled' }, 400);
+      }
+
+      const { file } = c.req.valid('form');
+      const query = c.req.valid('query');
+
+      const result = await processMediaJob({
+        file,
+        jobType: JobType.VIDEO_TO_GIF,
+        outputExtension: 'gif',
+        jobData: ({ inputPath, outputPath }) => ({
+          inputPath,
+          outputPath,
+          fps: query.fps,
+          width: query.width,
+          uploadToS3: true
+        })
+      });
+
+      if (!result.success) {
+        return c.json({ error: result.error }, 400);
+      }
+
+      if (!result.outputUrl) {
+        return c.json({ error: 'Conversion failed' }, 400);
+      }
+
+      return c.json({ url: result.outputUrl }, 200);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return c.json({ error: 'Processing failed', message: errorMessage }, 500);
+    }
   });
 }

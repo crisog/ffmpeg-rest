@@ -73,6 +73,27 @@ describe('Video Processing Integration', () => {
     expect(resultBuffer.byteLength).toBeGreaterThan(0);
   }, 30000);
 
+  it('should convert video to GIF', async () => {
+    const apiUrl = getApiUrl();
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/gif?fps=10`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/gif');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 30000);
+
   it('should reject invalid file', async () => {
     const apiUrl = getApiUrl();
     const formData = new FormData();
@@ -258,6 +279,57 @@ describe('Video Processing Integration - S3 Mode', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('application/zip');
+
+    const resultBuffer = await response.arrayBuffer();
+    expect(resultBuffer.byteLength).toBeGreaterThan(0);
+  }, 60000);
+
+  it('should convert video to GIF and upload to S3', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/gif/url?fps=10`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    expect(json).toHaveProperty('url');
+    expect(json.url).toContain('test-media/');
+    expect(json.url).toContain('.gif');
+
+    const key = json.url.split(`${TEST_BUCKET}/`)[1];
+    const headResult = await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: TEST_BUCKET,
+        Key: key
+      })
+    );
+    expect(headResult.ContentType).toBe('image/gif');
+  }, 60000);
+
+  it('should convert video to GIF and return binary from non-url endpoint in S3 mode', async () => {
+    const apiUrl = getApiUrl('s3');
+    const testVideoPath = path.join(__dirname, '../../../test-video.mp4');
+    const videoBuffer = await readFile(testVideoPath);
+
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(videoBuffer)], { type: 'video/mp4' });
+    formData.append('file', blob, 'test-video.mp4');
+
+    const response = await fetch(`${apiUrl}/video/gif`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/gif');
 
     const resultBuffer = await response.arrayBuffer();
     expect(resultBuffer.byteLength).toBeGreaterThan(0);

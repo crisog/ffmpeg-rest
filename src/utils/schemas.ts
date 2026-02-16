@@ -119,6 +119,32 @@ export const ResizeQuerySchema = z.object({
     })
 });
 
+export const GifQuerySchema = z.object({
+  fps: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(30))
+    .optional()
+    .default(10)
+    .openapi({
+      param: { name: 'fps', in: 'query' },
+      example: '10',
+      description: 'Frames per second (1-30, default 10)'
+    }),
+  width: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(1920))
+    .optional()
+    .openapi({
+      param: { name: 'width', in: 'query' },
+      example: '480',
+      description: 'Target width in pixels (max 1920). Height auto-scales to maintain aspect ratio.'
+    })
+});
+
 /**
  * Path parameters
  */

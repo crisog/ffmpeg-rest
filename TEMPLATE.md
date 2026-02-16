@@ -1,6 +1,6 @@
 # Deploy and Host FFmpeg REST API on Railway
 
-A REST API that wraps FFmpeg for media processing operations. Convert videos to MP4, extract audio tracks, extract frames, convert audio to MP3/WAV, convert images to JPG, and probe media metadata. Built with Node.js, Hono, and BullMQ for reliable async job processing.
+A REST API that wraps FFmpeg for media processing operations. Convert videos to MP4, convert to animated GIF, extract audio tracks, extract frames, convert audio to MP3/WAV, convert images to JPG, and probe media metadata. Built with Node.js, Hono, and BullMQ for reliable async job processing.
 
 <p align="center">
   <img src="https://github.com/crisog/ffmpeg-rest/blob/main/docs-preview.png?raw=true" alt="FFmpeg REST API Test Output" width="800">

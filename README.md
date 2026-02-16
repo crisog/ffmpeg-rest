@@ -16,7 +16,7 @@ A REST API that wraps FFmpeg for media processing operations. Built with Node.js
 
 Convert and process media files through simple HTTP endpoints:
 
-- **Video**: Convert any video to MP4, extract audio tracks (mono/stereo), extract frames at custom FPS (compressed as ZIP/GZIP)
+- **Video**: Convert any video to MP4, convert to animated GIF, extract audio tracks (mono/stereo), extract frames at custom FPS (compressed as ZIP/GZIP)
 - **Audio**: Convert any audio to MP3 or WAV
 - **Image**: Convert any image format to JPG
 - **Media Info**: Probe any media file for metadata and stream information
@@ -53,6 +53,7 @@ S3 Mode includes intelligent content-based deduplication to optimize storage cos
 - **Graceful Degradation**: Cache failures don't block uploads - the system falls back to normal upload behavior
 
 **Configuration**:
+
 ```bash
 S3_DEDUP_ENABLED=1           # Enable/disable deduplication (default: true)
 S3_DEDUP_TTL_DAYS=90         # Cache TTL in days (default: 90)

@@ -5,7 +5,7 @@ import path from 'path';
 import { Worker } from 'bullmq';
 import { createTestWorker } from '~/test-utils/worker';
 import { createTestAviFile } from '~/test-utils/fixtures';
-import { getVideoInfo, getAudioChannels, countFilesInZip } from '~/test-utils/probes';
+import { getVideoInfo, getAudioChannels, countFilesInZip, getImageDimensions } from '~/test-utils/probes';
 
 const TEST_DIR = path.join(process.cwd(), 'test-outputs', 'video-controller');
 const FIXTURES_DIR = path.join(process.cwd(), 'test-fixtures', 'video-controller');
@@ -234,6 +234,81 @@ describe('Video Controller', () => {
       expect(res.status).toBe(400);
       const json = await res.json();
       expect(json).toHaveProperty('error');
+    });
+  });
+
+  describe('POST /video/gif', () => {
+    it('should convert AVI to GIF', async () => {
+      const inputPath = path.join(FIXTURES_DIR, 'test-gif.avi');
+      createTestAviFile(inputPath);
+
+      const formData = new FormData();
+      const fileBuffer = readFileSync(inputPath);
+      const file = new File([fileBuffer], 'test.avi', {
+        type: 'video/x-msvideo'
+      });
+      formData.append('file', file);
+
+      const res = await app.request('/video/gif', {
+        method: 'POST',
+        body: formData
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toBe('image/gif');
+
+      const arrayBuffer = await res.arrayBuffer();
+      expect(arrayBuffer.byteLength).toBeGreaterThan(0);
+    });
+
+    it('should respect width query param', async () => {
+      const inputPath = path.join(FIXTURES_DIR, 'test-gif-width.avi');
+      createTestAviFile(inputPath);
+
+      const formData = new FormData();
+      const fileBuffer = readFileSync(inputPath);
+      const file = new File([fileBuffer], 'test.avi', {
+        type: 'video/x-msvideo'
+      });
+      formData.append('file', file);
+
+      const res = await app.request('/video/gif?width=160', {
+        method: 'POST',
+        body: formData
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toBe('image/gif');
+
+      const arrayBuffer = await res.arrayBuffer();
+      const dimensions = getImageDimensions(arrayBuffer, TEST_DIR);
+      expect(dimensions.width).toBe(160);
+    });
+
+    it('should return 400 for invalid file', async () => {
+      const formData = new FormData();
+      const file = new File(['invalid video data'], 'invalid.avi', { type: 'video/x-msvideo' });
+      formData.append('file', file);
+
+      const res = await app.request('/video/gif', {
+        method: 'POST',
+        body: formData
+      });
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json).toHaveProperty('error');
+    });
+
+    it('should return 400 for missing file', async () => {
+      const formData = new FormData();
+
+      const res = await app.request('/video/gif', {
+        method: 'POST',
+        body: formData
+      });
+
+      expect(res.status).toBe(400);
     });
   });
 });

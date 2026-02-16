@@ -8,6 +8,7 @@ import { checkS3Health } from '~/utils/storage';
 
 import { processAudioToMp3, processAudioToWav } from '~/queue/audio/processor';
 import { processVideoToMp4, processVideoExtractAudio, processVideoExtractFrames } from '~/queue/video/processor';
+import { processVideoToGif } from '~/queue/video/gif-processor';
 import { processImageToJpg, processImageResize } from '~/queue/image/processor';
 import { processMediaProbe } from '~/queue/media/processor';
 
@@ -29,6 +30,8 @@ const worker = new Worker<unknown, JobResult>(
         return processVideoExtractAudio(job as never);
       case JobType.VIDEO_EXTRACT_FRAMES:
         return processVideoExtractFrames(job as never);
+      case JobType.VIDEO_TO_GIF:
+        return processVideoToGif(job as never);
       case JobType.IMAGE_TO_JPG:
         return processImageToJpg(job as never);
       case JobType.IMAGE_RESIZE:
