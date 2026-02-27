@@ -4,18 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "dev:worker": "tsx watch src/worker.ts",
+    "dev": "npm run dev -w @ffmpeg-rest/server",
+    "dev:worker": "npm run dev -w @ffmpeg-rest/worker",
+    "dev:web": "npm run dev -w @ffmpeg-rest/web",
     "build": "npm run build:server && npm run build:worker",
-    "build:server": "esbuild src/server.ts --bundle --sourcemap --platform=node --format=esm --packages=external --loader:.node=file --outfile=dist/server.js",
-    "build:worker": "esbuild src/worker.ts --bundle --sourcemap --platform=node --format=esm --packages=external --loader:.node=file --outfile=dist/worker.js",
-    "start": "concurrently --names \"SERVER,WORKER\" --prefix-colors \"blue,green\" \"node ./dist/server.js\" \"node ./dist/worker.js\"",
-    "start:server": "node ./dist/server.js",
-    "start:worker": "node ./dist/worker.js",
-    "test:app": "TEST_MODE=app vitest --config vitest.config.ts --exclude '**/integration.test.ts'",
-    "test:integration": "TEST_MODE=integration vitest --config vitest.config.ts --run integration.test.ts",
-    "test:coverage": "vitest --coverage",
-    "typecheck": "tsc --noEmit",
+    "build:server": "npm run build -w @ffmpeg-rest/server",
+    "build:worker": "npm run build -w @ffmpeg-rest/worker",
+    "start": "concurrently --names \"SERVER,WORKER\" --prefix-colors \"blue,green\" \"node ./apps/server/dist/server.js\" \"node ./apps/worker/dist/worker.js\"",
+    "start:server": "node ./apps/server/dist/server.js",
+    "start:worker": "node ./apps/worker/dist/worker.js",
+    "test:app": "npm run test:app --workspaces --if-present",
+    "test:integration": "npm run test:integration -w @ffmpeg-rest/server",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",
     "prepare": "node .husky/install.mjs"
   },
@@ -65,5 +66,9 @@
       "eslint --fix",
       "prettier --write"
     ]
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

@@ -1,4 +1,4 @@
-import { setupIntegrationTests, teardownAllIntegrationTests } from './src/test-utils/integration-setup';
+import { setupIntegrationTests, teardownAllIntegrationTests } from './apps/server/src/test-utils/integration-setup';
 
 export default async function globalSetup() {
   const [stateless, s3] = await Promise.all([setupIntegrationTests(), setupIntegrationTests({ s3Mode: true })]);

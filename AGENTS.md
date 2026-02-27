@@ -11,6 +11,7 @@ For architecture/background, use `README.md`.
 - Dev processes (separate terminals):
   - `npm run dev`
   - `npm run dev:worker`
+  - `npm run dev:web` (scaffold placeholder)
 
 ## Validation Gates
 
@@ -33,24 +34,25 @@ Use `npm run format` if formatting is needed.
   - Binary endpoint (`/path`)
   - S3 URL endpoint (`/path/url`) with `uploadToS3: true`
 - Use `processMediaJob()` for conversion endpoints; `/media/info` is the exception.
-- Prefer `~/` imports for modules under `src/`.
+- Prefer `~/` imports for app-local modules under each app `src/`.
+- Use `@shared/*` only for cross-app, environment-agnostic modules.
 
 ## Change Touchpoints
 
 When adding a new endpoint that reuses an existing job type:
 
-1. `components/<domain>/schemas*.ts` + `controller.ts`
+1. `apps/server/src/components/<domain>/schemas*.ts` + `controller.ts`
 2. Tests (`controller.test.ts`, and integration tests when behavior crosses process/storage boundaries)
 
 When adding a new job type:
 
-1. `queue/<domain>/schemas*.ts` + `processor*.ts`
-2. `src/queue/index.ts` (`JobType`)
-3. `src/worker.ts` (register processor in the worker switch)
-4. `components/<domain>/schemas*.ts` + `controller.ts`
+1. `packages/shared/src/queue/<domain>/schemas*.ts` + `apps/worker/src/queue/<domain>/processor*.ts`
+2. `packages/shared/src/queue/contracts.ts` (`JobType`)
+3. `apps/worker/src/worker.ts` (register processor in the worker switch)
+4. `apps/server/src/components/<domain>/schemas*.ts` + `controller.ts`
 5. Tests (`processor.test.ts`, `controller.test.ts`, and integration tests when behavior crosses process/storage boundaries)
 
-Update `src/app.ts` only when adding a new route module/domain (new `register*Routes` call).
+Update `apps/server/src/app.ts` only when adding a new route module/domain (new `register*Routes` call).
 
 ## Testing Principle
 

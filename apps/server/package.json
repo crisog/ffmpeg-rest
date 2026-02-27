@@ -1,0 +1,14 @@
+{
+  "name": "@ffmpeg-rest/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "esbuild src/server.ts --bundle --sourcemap --platform=node --format=esm --packages=external --loader:.node=file --outfile=dist/server.js",
+    "start": "node ./dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test:app": "TEST_MODE=app vitest --config vitest.config.ts --exclude '**/integration.test.ts'",
+    "test:integration": "TEST_MODE=integration vitest --config vitest.config.ts",
+    "test:coverage": "vitest --config vitest.config.ts --coverage"
+  }
+}

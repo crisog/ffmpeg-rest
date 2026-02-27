@@ -16,6 +16,8 @@ node_modules/
 
 # build
 dist/
+apps/*/dist/
+packages/*/dist/
 
 # env
 .env
@@ -37,3 +39,5 @@ lerna-debug.log*
 # test
 test-outputs/
 test-fixtures/
+apps/*/test-outputs/
+apps/*/test-fixtures/

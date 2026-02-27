@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "paths": {
+      "~/*": ["./src/*"],
+      "@shared/*": ["../../packages/shared/src/*"],
+      "@worker/*": ["../worker/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

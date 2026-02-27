@@ -1,0 +1,13 @@
+{
+  "name": "@ffmpeg-rest/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "build": "esbuild src/worker.ts --bundle --sourcemap --platform=node --format=esm --packages=external --loader:.node=file --outfile=dist/worker.js",
+    "start": "node ./dist/worker.js",
+    "typecheck": "tsc --noEmit",
+    "test:app": "TEST_MODE=app vitest --config vitest.config.ts",
+    "test:coverage": "vitest --config vitest.config.ts --coverage"
+  }
+}

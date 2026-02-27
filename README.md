@@ -25,8 +25,8 @@ Convert and process media files through simple HTTP endpoints:
 
 The service runs as two separate Node.js processes connected through Redis:
 
-1. **API Server** (`src/server.ts`): Hono HTTP API that accepts uploads, writes temp files, enqueues BullMQ jobs, waits for completion, and returns the result.
-2. **Worker** (`src/worker.ts`): BullMQ consumer that executes FFmpeg/FFprobe jobs and returns job results.
+1. **API Server** (`apps/server/src/server.ts`): Hono HTTP API that accepts uploads, writes temp files, enqueues BullMQ jobs, waits for completion, and returns the result.
+2. **Worker** (`apps/worker/src/worker.ts`): BullMQ consumer that executes FFmpeg/FFprobe jobs and returns job results.
 
 From the client perspective, requests are synchronous even though processing is queued internally.
 
@@ -35,6 +35,15 @@ Client -> Hono Server -> Redis/BullMQ -> Worker -> FFmpeg/FFprobe
            ^                                  |
            +----------- wait for result ------+
 ```
+
+### Monorepo Layout
+
+This project uses npm workspaces:
+
+- `apps/server` - HTTP API server
+- `apps/worker` - BullMQ worker
+- `apps/web` - upcoming web app scaffold
+- `packages/shared` - shared queue contracts/schemas and pure utilities
 
 ## Storage Modes
 
@@ -133,6 +142,9 @@ Every endpoint is fully documented with request/response schemas, validation rul
 
    # Terminal 2 - Start the worker
    npm run dev:worker
+
+   # Optional (scaffold placeholder)
+   npm run dev:web
    ```
 
    Production mode:

@@ -13,7 +13,11 @@ FROM base AS deps
 ENV HUSKY=0
 
 COPY package*.json ./
-COPY .husky/install.mjs .husky/install.mjs
+COPY apps/server/package.json ./apps/server/package.json
+COPY apps/worker/package.json ./apps/worker/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY .husky/install.mjs ./.husky/install.mjs
 RUN npm ci --omit=dev
 
 FROM base AS build
@@ -21,7 +25,11 @@ FROM base AS build
 ENV HUSKY=0
 
 COPY package*.json ./
-COPY .husky/install.mjs .husky/install.mjs
+COPY apps/server/package.json ./apps/server/package.json
+COPY apps/worker/package.json ./apps/worker/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY .husky/install.mjs ./.husky/install.mjs
 RUN npm ci
 
 COPY . .
@@ -33,7 +41,8 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=build --chown=nodejs:nodejs /app/apps/server/dist ./apps/server/dist
+COPY --from=build --chown=nodejs:nodejs /app/apps/worker/dist ./apps/worker/dist
 COPY --chown=nodejs:nodejs package*.json ./
 
 USER nodejs

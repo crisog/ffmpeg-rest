@@ -1,5 +1,6 @@
 node_modules
 dist
+apps/*/dist
 .git
 .env
 .env.*
@@ -8,4 +9,6 @@ dist
 coverage
 test-outputs
 test-fixtures
+apps/*/test-outputs
+apps/*/test-fixtures
 .DS_Store

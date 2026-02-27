@@ -1,0 +1,10 @@
+{
+  "name": "@ffmpeg-rest/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node -e \"console.log('apps/web scaffold: not implemented yet')\"",
+    "build": "node -e \"console.log('apps/web scaffold: not implemented yet')\"",
+    "start": "node -e \"console.log('apps/web scaffold: not implemented yet')\""
+  }
+}
