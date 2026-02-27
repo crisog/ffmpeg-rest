@@ -15,9 +15,7 @@ coverage/
 node_modules/
 
 # build
-dist/
-apps/*/dist/
-packages/*/dist/
+**/dist/
 
 # env
 .env
@@ -37,7 +35,5 @@ lerna-debug.log*
 .claude/
 
 # test
-test-outputs/
-test-fixtures/
-apps/*/test-outputs/
-apps/*/test-fixtures/
+**/test-outputs/
+**/test-fixtures/

@@ -1,14 +1,11 @@
 node_modules
-dist
-apps/*/dist
+**/dist
 .git
 .env
 .env.*
 !.env.example
 *.log
 coverage
-test-outputs
-test-fixtures
-apps/*/test-outputs
-apps/*/test-fixtures
+**/test-outputs
+**/test-fixtures
 .DS_Store
