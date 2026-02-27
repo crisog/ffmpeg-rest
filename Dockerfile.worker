@@ -1,8 +1,8 @@
-FROM jrottenberg/ffmpeg:7.1-scratch AS ffmpeg
+ARG FFMPEG_TARGET_PLATFORM=linux/amd64
 
-FROM node:22.20.0-alpine AS base
+FROM --platform=${FFMPEG_TARGET_PLATFORM} jrottenberg/ffmpeg:7.1-scratch AS ffmpeg
 
-COPY --from=ffmpeg /usr/local /usr/local
+FROM --platform=${FFMPEG_TARGET_PLATFORM} node:22.20.0-alpine AS base
 
 WORKDIR /app
 
@@ -37,6 +37,10 @@ FROM base AS runtime
 
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
+
+COPY --from=ffmpeg /bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /bin/ffprobe /usr/local/bin/ffprobe
+COPY --from=ffmpeg /lib /lib
 
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=nodejs:nodejs /app/apps/worker/dist ./apps/worker/dist
