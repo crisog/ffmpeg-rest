@@ -2,9 +2,7 @@ FROM jrottenberg/ffmpeg:7.1-scratch AS ffmpeg
 
 FROM node:22.20.0-alpine AS base
 
-COPY --from=ffmpeg /bin/ffmpeg /bin/ffmpeg
-COPY --from=ffmpeg /bin/ffprobe /bin/ffprobe
-COPY --from=ffmpeg /lib /lib
+COPY --from=ffmpeg /usr/local /usr/local
 
 WORKDIR /app
 
