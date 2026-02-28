@@ -299,7 +299,7 @@ function HomePage(): React.JSX.Element {
   /* ── Render ────────────────────────────── */
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 md:py-12">
+    <div className="flex flex-1 flex-col items-center px-4 pt-[12vh] pb-8">
       <div
         className="canvas reveal relative w-full max-w-[540px]"
         onDragOver={(e) => {
@@ -311,11 +311,19 @@ function HomePage(): React.JSX.Element {
           if (stage !== 'processing') handleDrop(e);
         }}
       >
-        <input ref={fileInputRef} type="file" accept="video/*" className="sr-only" onChange={handleFileChange} />
+        <input
+          id="file-input"
+          ref={fileInputRef}
+          type="file"
+          accept="video/*"
+          className="sr-only"
+          onChange={handleFileChange}
+        />
 
         {/* ── Idle: drop zone ────────────── */}
         {stage === 'idle' && !selectedFile && (
           <label
+            htmlFor="file-input"
             className={`flex min-h-[320px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border border-dashed transition-all duration-300 ${
               isDragging
                 ? 'border-accent bg-accent-soft/40 scale-[1.01]'
