@@ -28,8 +28,13 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(405, 'Method not allowed');
   }
 
-  const path = getRouterParam(event, 'path');
-  if (!path || path.includes('..')) {
+  const rawPath = getRouterParam(event, 'path');
+  if (!rawPath) {
+    throw HTTPError.status(400, 'Invalid API path');
+  }
+
+  const path = decodeURIComponent(rawPath);
+  if (path.includes('..')) {
     throw HTTPError.status(400, 'Invalid API path');
   }
 
