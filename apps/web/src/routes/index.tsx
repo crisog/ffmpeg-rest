@@ -1,3 +1,4 @@
+import { Progress } from '@base-ui/react/progress';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -429,12 +430,11 @@ function HomePage(): React.JSX.Element {
                 <p className="text-xs font-medium text-ink">Converting to {selectedTarget?.label}</p>
               </div>
             </div>
-            <div className="mx-auto h-[3px] w-full max-w-[400px] overflow-hidden rounded-full bg-stone">
-              <div
-                className="h-full rounded-full bg-accent transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <Progress.Root value={progress} className="mx-auto w-full max-w-[400px]">
+              <Progress.Track className="h-[3px] overflow-hidden rounded-full bg-stone">
+                <Progress.Indicator className="h-full rounded-full bg-accent transition-all duration-300 ease-out" />
+              </Progress.Track>
+            </Progress.Root>
           </div>
         )}
 
