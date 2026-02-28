@@ -8,10 +8,11 @@ For architecture/background, use `README.md`.
 - Required: Node.js 22+, `ffmpeg`, and `ffprobe` in `PATH`
 - Install deps: `npm ci`
 - Local dev infra: `docker-compose up -d` (Redis)
-- Dev processes (separate terminals):
-  - `npm run dev`
+- Dev process (all-in-one): `npm run dev` (web + server + worker)
+- Optional split commands:
+  - `npm run dev:server`
   - `npm run dev:worker`
-  - `npm run dev:web` (scaffold placeholder)
+  - `npm run dev:web`
 
 ## Validation Gates
 

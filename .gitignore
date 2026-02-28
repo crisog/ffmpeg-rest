@@ -16,6 +16,7 @@ node_modules/
 
 # build
 **/dist/
+**/.output/
 
 # env
 .env

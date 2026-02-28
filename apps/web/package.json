@@ -1,10 +1,34 @@
 {
   "name": "@ffmpeg-rest/web",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node -e \"console.log('apps/web scaffold: not implemented yet')\"",
-    "build": "node -e \"console.log('apps/web scaffold: not implemented yet')\"",
-    "start": "node -e \"console.log('apps/web scaffold: not implemented yet')\""
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "node .output/server/index.mjs",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.1.0",
+    "@fontsource-variable/geist-mono": "^5.2.7",
+    "@tanstack/react-router": "^1.158.4",
+    "hono": "^4.12.3",
+    "nitro": "^3.0.1-alpha.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/router-devtools": "^1.158.4",
+    "@tanstack/router-plugin": "^1.158.4",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "rolldown": "^1.0.0-rc.6",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }

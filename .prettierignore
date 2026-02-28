@@ -51,3 +51,4 @@ jspm_packages/
 .yarn-integrity
 
 .next
+**/routeTree.gen.ts

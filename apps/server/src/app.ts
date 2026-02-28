@@ -15,7 +15,17 @@ export function createApp() {
 
   if (env.AUTH_TOKEN) {
     logger.info('🔒 Bearer authentication enabled');
-    app.use('/*', bearerAuth({ token: env.AUTH_TOKEN }));
+    const expectedToken = env.AUTH_TOKEN;
+
+    app.use(
+      '/*',
+      bearerAuth({
+        token: expectedToken,
+        noAuthenticationHeader: { message: { message: 'Unauthorized' } },
+        invalidAuthenticationHeader: { message: { message: 'Unauthorized' } },
+        invalidToken: { message: { message: 'Unauthorized' } }
+      })
+    );
   } else {
     logger.warn('⚠️  Authentication disabled - set AUTH_TOKEN to enable');
   }

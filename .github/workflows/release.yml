@@ -101,3 +101,14 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/ffmpeg-rest-worker:${{ steps.check.outputs.version }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/ffmpeg-rest-worker:latest
+
+      - name: Build and push web image
+        if: steps.check.outputs.released == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ffmpeg-rest-web:${{ steps.check.outputs.version }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ffmpeg-rest-web:latest

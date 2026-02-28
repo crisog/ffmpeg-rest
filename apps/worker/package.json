@@ -9,5 +9,16 @@
     "typecheck": "tsc --noEmit",
     "test:app": "TEST_MODE=app vitest --config vitest.config.ts",
     "test:coverage": "vitest --config vitest.config.ts --coverage"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.901.0",
+    "archiver": "^7.0.1",
+    "bullmq": "^5.60.0",
+    "dotenv": "^17.2.3",
+    "ioredis": "^5.8.0",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.1",
+    "tar": "^7.5.1",
+    "zod": "^4.1.11"
   }
 }

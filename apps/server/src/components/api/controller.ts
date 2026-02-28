@@ -1,8 +1,8 @@
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import { getReadmeRoute, getEndpointsRoute } from './schemas';
 
-export function registerApiRoutes(app: OpenAPIHono) {
-  app.openapi(getReadmeRoute, (c) => {
+export function registerApiRoutes<T extends OpenAPIHono>(app: T) {
+  const appWithReadme = app.openapi(getReadmeRoute, (c) => {
     return c.html(`
       <!DOCTYPE html>
       <html>
@@ -30,7 +30,7 @@ export function registerApiRoutes(app: OpenAPIHono) {
     `);
   });
 
-  app.openapi(getEndpointsRoute, (c) => {
+  return appWithReadme.openapi(getEndpointsRoute, (c) => {
     const endpoints = [
       { path: '/', method: 'GET', description: 'API documentation homepage' },
       { path: '/endpoints', method: 'GET', description: 'List all endpoints' },

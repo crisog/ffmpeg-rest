@@ -42,7 +42,7 @@ This project uses npm workspaces:
 
 - `apps/server` - HTTP API server
 - `apps/worker` - BullMQ worker
-- `apps/web` - upcoming web app scaffold
+- `apps/web` - Vite + TanStack Router frontend scaffold
 - `packages/shared` - shared queue contracts/schemas and pure utilities
 
 ## Storage Modes
@@ -129,7 +129,8 @@ Every endpoint is fully documented with request/response schemas, validation rul
 
    ```bash
    cp .env.example .env
-   # Edit .env with your settings
+   cp apps/web/.env.example apps/web/.env
+   # Edit both files with your settings
    ```
 
 5. **Run the API**
@@ -137,13 +138,15 @@ Every endpoint is fully documented with request/response schemas, validation rul
    Development mode (with auto-reload):
 
    ```bash
-   # Terminal 1 - Start the API server
+   # Starts web + server + worker
    npm run dev
+   ```
 
-   # Terminal 2 - Start the worker
+   Or run processes individually:
+
+   ```bash
+   npm run dev:server
    npm run dev:worker
-
-   # Optional (scaffold placeholder)
    npm run dev:web
    ```
 
@@ -153,6 +156,29 @@ Every endpoint is fully documented with request/response schemas, validation rul
    npm run build
    npm start
    ```
+
+## Web App + Nitro Proxy
+
+The `apps/web` workspace is a Vite + TanStack Router frontend with a Nitro catch-all proxy for `/api/**`.
+
+- Dev server: `npm run dev:web`
+- Proxy route: `apps/web/routes/api/[...path].ts`
+- Frontend API client uses Hono RPC (`hc`) with shared `AppType` from the server
+
+Proxy behavior:
+
+- Requests to `/api/**` are forwarded to `BACKEND_URL` (required)
+- `Authorization: Bearer ${AUTH_TOKEN}` is injected server-side when `AUTH_TOKEN` is set
+- Browser clients do not need to store or submit `AUTH_TOKEN`
+- Web dev server runs on `http://localhost:5173` (fixed), API server defaults to `http://localhost:3000`
+
+Environment variables:
+
+```bash
+BACKEND_URL=http://localhost:3000
+AUTH_TOKEN=your-api-token
+WEB_PASSWORD=
+```
 
 ## Contribution Policy
 
