@@ -34,13 +34,17 @@ export default defineHandler(async (event) => {
   }
 
   const path = decodeURIComponent(rawPath);
-  if (path.includes('..')) {
+  if (path.includes('..') || path.includes('://') || path.startsWith('//')) {
     throw HTTPError.status(400, 'Invalid API path');
   }
 
   const requestUrl = getRequestURL(event);
   const backendUrl = resolveBackendBaseURL();
   const upstreamUrl = new URL(path, backendUrl);
+
+  if (upstreamUrl.origin !== backendUrl.origin) {
+    throw HTTPError.status(400, 'Invalid API path');
+  }
   upstreamUrl.search = requestUrl.search;
 
   const headers = getProxyRequestHeaders(event, { host: false });
