@@ -1,8 +1,40 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as cacache from 'cacache';
+import { readdir } from 'fs/promises';
+import path from 'path';
 import { clearCacheTestEnv, createTempDirTracker, setCacheTestEnv } from '../test-utils/test-helpers';
 
 const { createTempDir, cleanupTempDirs } = createTempDirTracker();
+
+async function countContentBlobs(cacheDir: string): Promise<number> {
+  const contentRoot = path.join(cacheDir, 'content-v2');
+  let count = 0;
+
+  const walk = async (dir: string): Promise<void> => {
+    const entries = await readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else if (entry.isFile()) {
+        count += 1;
+      }
+    }
+  };
+
+  try {
+    await walk(contentRoot);
+    return count;
+  } catch (error) {
+    const maybeErrno = error as NodeJS.ErrnoException;
+    if (maybeErrno.code === 'ENOENT') {
+      return 0;
+    }
+
+    throw error;
+  }
+}
 
 async function loadCacheModule(options?: { cacheEnabled?: boolean; ttlHours?: number; maxSizeMb?: number }) {
   const cacheDir = await createTempDir('cache-utils-');
@@ -172,6 +204,18 @@ describe('cache utility', () => {
 
     expect(oldEntry).toBeNull();
     expect(newEntry).not.toBeNull();
+  });
+
+  it('should garbage collect unreferenced content after eviction', async () => {
+    const { initCacheDir, putCachedOutput, cacheDir } = await loadCacheModule({ maxSizeMb: 1 });
+    await initCacheDir();
+
+    await putCachedOutput('entry-a', Buffer.alloc(700 * 1024, 1));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await putCachedOutput('entry-b', Buffer.alloc(700 * 1024, 2));
+
+    const contentBlobs = await countContentBlobs(cacheDir);
+    expect(contentBlobs).toBe(1);
   });
 
   it('should no-op when cache is disabled', async () => {
