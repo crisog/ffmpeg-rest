@@ -239,22 +239,3 @@ export async function initCacheDir(): Promise<void> {
   await mkdir(env.CACHE_DIR, { recursive: true });
   await enforceCacheRetention();
 }
-
-export function startCacheCleanup(): () => void {
-  if (!env.CACHE_ENABLED) {
-    return () => {
-      // noop
-    };
-  }
-
-  const intervalMs = env.CACHE_SWEEP_INTERVAL_MINUTES * 60 * 1000;
-  const timer = setInterval(() => {
-    void enforceCacheRetention();
-  }, intervalMs);
-
-  timer.unref();
-
-  return () => {
-    clearInterval(timer);
-  };
-}

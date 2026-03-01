@@ -4,12 +4,7 @@ import { clearCacheTestEnv, createTempDirTracker, setCacheTestEnv } from '../tes
 
 const { createTempDir, cleanupTempDirs } = createTempDirTracker();
 
-async function loadCacheModule(options?: {
-  cacheEnabled?: boolean;
-  ttlHours?: number;
-  maxSizeMb?: number;
-  sweepIntervalMinutes?: number;
-}) {
+async function loadCacheModule(options?: { cacheEnabled?: boolean; ttlHours?: number; maxSizeMb?: number }) {
   const cacheDir = await createTempDir('cache-utils-');
   const tempDir = await createTempDir('cache-utils-temp-');
 
@@ -21,8 +16,7 @@ async function loadCacheModule(options?: {
     cacheDir,
     cacheEnabled: options?.cacheEnabled,
     ttlHours: options?.ttlHours,
-    maxSizeMb: options?.maxSizeMb,
-    sweepIntervalMinutes: options?.sweepIntervalMinutes
+    maxSizeMb: options?.maxSizeMb
   });
 
   const mod = await import('./cache');

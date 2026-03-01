@@ -64,7 +64,7 @@ Stateless mode can optionally cache binary conversion outputs using `cacache` to
 
 - Cache scope: binary conversion endpoints only (not `/.../url` S3 responses, not `/media/info`)
 - Cache key: SHA-256 of input bytes + job type + normalized processing params
-- Retention: TTL + size cap with periodic cleanup
+- Retention: TTL + size cap (enforced on reads/writes and startup)
 - Storage: local filesystem (ephemeral by default)
 
 **Configuration**:
@@ -74,7 +74,6 @@ CACHE_ENABLED=false             # Enable/disable stateless cache
 CACHE_DIR=/tmp/ffmpeg-rest/cache
 CACHE_TTL_HOURS=2160            # 90 days
 CACHE_MAX_SIZE_MB=1024          # 1 GiB
-CACHE_SWEEP_INTERVAL_MINUTES=60
 ```
 
 ### S3 Mode

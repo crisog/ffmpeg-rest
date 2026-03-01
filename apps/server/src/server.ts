@@ -3,24 +3,13 @@ import { createApp } from '~/app';
 import { env } from '~/config/env';
 import { checkRedisHealth } from '~/config/redis';
 import { logger } from '~/config/logger';
-import { initCacheDir, startCacheCleanup } from '~/utils/cache';
+import { initCacheDir } from '~/utils/cache';
 
 await checkRedisHealth();
 
-let stopCacheCleanup: () => void = () => undefined;
 if (env.CACHE_ENABLED) {
   await initCacheDir();
-  stopCacheCleanup = startCacheCleanup();
 }
-
-const handleShutdown = (signal: NodeJS.Signals) => {
-  logger.info({ signal }, 'Shutting down server');
-  stopCacheCleanup();
-  process.exit(0);
-};
-
-process.once('SIGINT', () => handleShutdown('SIGINT'));
-process.once('SIGTERM', () => handleShutdown('SIGTERM'));
 
 const app = createApp();
 

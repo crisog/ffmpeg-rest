@@ -8,7 +8,6 @@ interface CacheTestEnvOptions {
   cacheEnabled?: boolean;
   ttlHours?: number;
   maxSizeMb?: number;
-  sweepIntervalMinutes?: number;
 }
 
 export function createTempDirTracker() {
@@ -40,7 +39,6 @@ export function setCacheTestEnv(options: CacheTestEnvOptions): void {
   process.env['CACHE_DIR'] = options.cacheDir;
   process.env['CACHE_TTL_HOURS'] = String(options.ttlHours ?? 24);
   process.env['CACHE_MAX_SIZE_MB'] = String(options.maxSizeMb ?? 10);
-  process.env['CACHE_SWEEP_INTERVAL_MINUTES'] = String(options.sweepIntervalMinutes ?? 60);
 }
 
 export function clearCacheTestEnv(): void {
@@ -48,6 +46,5 @@ export function clearCacheTestEnv(): void {
   delete process.env['CACHE_DIR'];
   delete process.env['CACHE_TTL_HOURS'];
   delete process.env['CACHE_MAX_SIZE_MB'];
-  delete process.env['CACHE_SWEEP_INTERVAL_MINUTES'];
   delete process.env['TEMP_DIR'];
 }

@@ -20,7 +20,6 @@ const schema = z.object({
   CACHE_DIR: z.string().optional(),
   CACHE_TTL_HOURS: z.coerce.number().int().positive().default(2160),
   CACHE_MAX_SIZE_MB: z.coerce.number().int().positive().default(1024),
-  CACHE_SWEEP_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
 
   AUTH_TOKEN: z.string().optional()
 });
