@@ -58,6 +58,27 @@ describe('cache utility', () => {
     expect(keyA).not.toBe(keyC);
   });
 
+  it('should generate different keys for different input bytes', async () => {
+    const { computeCacheKey } = await loadCacheModule();
+    const params = { quality: 2, mode: 'fit' };
+
+    const keyA = computeCacheKey(Buffer.from('input-a'), 'audio:mp3', 'mp3', params);
+    const keyB = computeCacheKey(Buffer.from('input-b'), 'audio:mp3', 'mp3', params);
+
+    expect(keyA).not.toBe(keyB);
+  });
+
+  it('should generate different keys for different output extensions', async () => {
+    const { computeCacheKey } = await loadCacheModule();
+    const input = Buffer.from('same-input');
+    const params = { quality: 2, mode: 'fit' };
+
+    const keyA = computeCacheKey(input, 'audio:mp3', 'mp3', params);
+    const keyB = computeCacheKey(input, 'audio:mp3', 'wav', params);
+
+    expect(keyA).not.toBe(keyB);
+  });
+
   it('should ignore runtime-only path keys in operation signature', async () => {
     const { computeCacheKey } = await loadCacheModule();
     const input = Buffer.from('same-input');
