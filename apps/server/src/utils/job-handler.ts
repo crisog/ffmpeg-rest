@@ -89,12 +89,10 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
     const result = validateJobResult(rawResult);
 
     if (!result.success) {
-      await cleanup();
       return { success: false, error: result.error ?? 'Unknown error' };
     }
 
     if (result.outputUrl) {
-      await cleanup();
       return { success: true, outputUrl: result.outputUrl, metadata: result.metadata };
     }
 
@@ -102,17 +100,14 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
       const outputBuffer = await readFile(result.outputPath);
 
       if (cacheKey) {
-        await putCachedOutput(cacheKey, outputBuffer, jobType, outputExtension, result.metadata);
+        await putCachedOutput(cacheKey, outputBuffer, result.metadata);
       }
 
-      await cleanup();
       return { success: true, outputPath: result.outputPath, outputBuffer, metadata: result.metadata };
     }
 
-    await cleanup();
     return { success: false, error: 'No output produced' };
   } catch (error) {
-    await cleanup();
     let errorMessage: string;
     if (error instanceof Error) {
       errorMessage = error.message;
@@ -124,6 +119,8 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
       success: false,
       error: errorMessage
     };
+  } finally {
+    await cleanup();
   }
 }
 

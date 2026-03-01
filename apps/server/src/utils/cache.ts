@@ -10,8 +10,6 @@ const EXCLUDED_KEYS = new Set(['inputPath', 'outputPath', 'outputDir', 'jobDir',
 
 const CacheMetadataSchema = z.object({
   createdAt: z.number(),
-  jobType: z.string(),
-  outputExtension: z.string(),
   resultMetadata: z.record(z.string(), z.unknown()).optional()
 });
 
@@ -90,18 +88,6 @@ function isExpiredEntry(entry: CacheEntryLike): boolean {
   return isExpiredByTimestamp(getEntryTimestamp(entry));
 }
 
-async function runVerifyAfterRemovals(hadRemovals: boolean): Promise<void> {
-  if (!hadRemovals) {
-    return;
-  }
-
-  try {
-    await cacache.verify(env.CACHE_DIR, { concurrency: 8 });
-  } catch (error) {
-    logger.warn({ error }, 'Cache verify failed after retention cleanup');
-  }
-}
-
 export function isCacheEligibleJobData(jobDataResult: Record<string, unknown>): boolean {
   const uploadToS3 = jobDataResult['uploadToS3'];
   return uploadToS3 !== true;
@@ -165,14 +151,12 @@ async function enforceCacheRetention(requiredSpaceBytes = 0): Promise<void> {
   try {
     const entriesMap = await cacache.ls(env.CACHE_DIR);
     const entries = Object.values(entriesMap) as CacheEntryLike[];
-    let hadRemovals = false;
 
     const activeEntries: CacheEntryLike[] = [];
 
     for (const entry of entries) {
       if (isExpiredEntry(entry)) {
         await cacache.rm.entry(env.CACHE_DIR, entry.key);
-        hadRemovals = true;
       } else {
         activeEntries.push(entry);
       }
@@ -189,10 +173,7 @@ async function enforceCacheRetention(requiredSpaceBytes = 0): Promise<void> {
 
       await cacache.rm.entry(env.CACHE_DIR, oldest.key);
       currentSize -= oldest.size;
-      hadRemovals = true;
     }
-
-    await runVerifyAfterRemovals(hadRemovals);
   } catch (error) {
     logger.warn({ error }, 'Failed to enforce cache retention');
   }
@@ -201,8 +182,6 @@ async function enforceCacheRetention(requiredSpaceBytes = 0): Promise<void> {
 export async function putCachedOutput(
   cacheKey: string,
   outputBuffer: Buffer,
-  jobType: string,
-  outputExtension: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {
   if (!env.CACHE_ENABLED) {
@@ -221,8 +200,6 @@ export async function putCachedOutput(
     await cacache.put(env.CACHE_DIR, cacheKey, outputBuffer, {
       metadata: {
         createdAt: Date.now(),
-        jobType,
-        outputExtension,
         resultMetadata: metadata
       }
     });

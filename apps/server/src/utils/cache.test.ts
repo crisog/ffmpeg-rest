@@ -131,7 +131,7 @@ describe('cache utility', () => {
 
     const key = 'roundtrip-key';
     const output = Buffer.from('converted-output');
-    await putCachedOutput(key, output, 'audio:mp3', 'mp3', { codec: 'mp3' });
+    await putCachedOutput(key, output, { codec: 'mp3' });
 
     const cached = await getCachedOutput(key);
     expect(cached?.outputBuffer.toString()).toBe('converted-output');
@@ -163,9 +163,9 @@ describe('cache utility', () => {
     const keyNew = 'new-entry';
     const payload = Buffer.alloc(700 * 1024, 1);
 
-    await putCachedOutput(keyOld, payload, 'audio:mp3', 'mp3');
+    await putCachedOutput(keyOld, payload);
     await new Promise((resolve) => setTimeout(resolve, 10));
-    await putCachedOutput(keyNew, payload, 'audio:mp3', 'mp3');
+    await putCachedOutput(keyNew, payload);
 
     const oldEntry = await getCachedOutput(keyOld);
     const newEntry = await getCachedOutput(keyNew);
@@ -176,7 +176,7 @@ describe('cache utility', () => {
 
   it('should no-op when cache is disabled', async () => {
     const { putCachedOutput, getCachedOutput } = await loadCacheModule({ cacheEnabled: false });
-    await putCachedOutput('disabled-key', Buffer.from('data'), 'audio:mp3', 'mp3');
+    await putCachedOutput('disabled-key', Buffer.from('data'));
 
     const cached = await getCachedOutput('disabled-key');
     expect(cached).toBeNull();
