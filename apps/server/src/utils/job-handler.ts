@@ -4,13 +4,7 @@ import { mkdir, writeFile, readFile, rm } from 'fs/promises';
 import path from 'path';
 import { env } from '~/config/env';
 import { addJob, queueEvents, validateJobResult, JobTypeName } from '~/queue';
-import {
-  extractCacheableParams,
-  computeCacheKey,
-  getCachedOutput,
-  putCachedOutput,
-  isCacheEligibleJobData
-} from '~/utils/cache';
+import { computeCacheKey, getCachedOutput, putCachedOutput, isCacheEligibleJobData } from '~/utils/cache';
 
 const JobPathsSchema = z.object({
   inputPath: z.string(),
@@ -71,7 +65,10 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
     const canUseCache = env.CACHE_ENABLED && isCacheEligibleJobData(payload);
-    const cacheKey = canUseCache ? computeCacheKey(inputBuffer, jobType, extractCacheableParams(payload)) : null;
+    let cacheKey: string | null = null;
+    if (canUseCache) {
+      cacheKey = computeCacheKey(inputBuffer, jobType, outputExtension, payload);
+    }
 
     if (cacheKey) {
       const cached = await getCachedOutput(cacheKey);
@@ -116,14 +113,25 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
     return { success: false, error: 'No output produced' };
   } catch (error) {
     await cleanup();
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else {
+      errorMessage = String(error);
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error)
+      error: errorMessage
     };
   }
 }
 
 export function getOutputFilename(originalName: string, newExtension: string): string {
   const baseName = originalName.replace(/\.[^.]+$/, '');
-  return newExtension ? `${baseName}.${newExtension}` : baseName;
+  if (newExtension) {
+    return `${baseName}.${newExtension}`;
+  }
+
+  return baseName;
 }

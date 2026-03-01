@@ -40,8 +40,8 @@ describe('cache utility', () => {
     const input = Buffer.from('same-input');
     const params = { quality: 2, mode: 'fit' };
 
-    const key1 = computeCacheKey(input, 'audio:mp3', params);
-    const key2 = computeCacheKey(input, 'audio:mp3', params);
+    const key1 = computeCacheKey(input, 'audio:mp3', 'mp3', params);
+    const key2 = computeCacheKey(input, 'audio:mp3', 'mp3', params);
 
     expect(key1).toBe(key2);
   });
@@ -50,33 +50,64 @@ describe('cache utility', () => {
     const { computeCacheKey } = await loadCacheModule();
     const input = Buffer.from('same-input');
 
-    const keyA = computeCacheKey(input, 'audio:mp3', { quality: 2 });
-    const keyB = computeCacheKey(input, 'audio:mp3', { quality: 7 });
-    const keyC = computeCacheKey(input, 'video:mp4', { quality: 2 });
+    const keyA = computeCacheKey(input, 'audio:mp3', 'mp3', { quality: 2 });
+    const keyB = computeCacheKey(input, 'audio:mp3', 'mp3', { quality: 7 });
+    const keyC = computeCacheKey(input, 'video:mp4', 'mp4', { quality: 2 });
 
     expect(keyA).not.toBe(keyB);
     expect(keyA).not.toBe(keyC);
   });
 
-  it('should strip runtime path and S3 keys from cacheable params', async () => {
-    const { extractCacheableParams } = await loadCacheModule();
-    const params = extractCacheableParams({
-      inputPath: '/tmp/input',
-      outputPath: '/tmp/output',
-      outputDir: '/tmp/frames',
-      jobDir: '/tmp/job',
+  it('should ignore runtime-only path keys in operation signature', async () => {
+    const { computeCacheKey } = await loadCacheModule();
+    const input = Buffer.from('same-input');
+
+    const keyA = computeCacheKey(input, 'audio:mp3', 'mp3', {
+      inputPath: '/tmp/input-a',
+      outputPath: '/tmp/output-a',
+      outputDir: '/tmp/frames-a',
+      jobDir: '/tmp/job-a',
       uploadToS3: true,
       quality: 2,
       nested: {
-        outputPath: '/tmp/nested',
+        outputPath: '/tmp/nested-a',
         mode: 'fit'
       }
     });
 
-    expect(params).toEqual({
-      nested: { mode: 'fit' },
+    const keyB = computeCacheKey(input, 'audio:mp3', 'mp3', {
+      inputPath: '/tmp/input-b',
+      outputPath: '/tmp/output-b',
+      outputDir: '/tmp/frames-b',
+      jobDir: '/tmp/job-b',
+      uploadToS3: false,
+      quality: 2,
+      nested: {
+        outputPath: '/tmp/nested-b',
+        mode: 'fit'
+      }
+    });
+
+    expect(keyA).toBe(keyB);
+  });
+
+  it('should be deterministic across different object key orders', async () => {
+    const { computeCacheKey } = await loadCacheModule();
+    const input = Buffer.from('same-input');
+
+    const keyA = computeCacheKey(input, 'audio:mp3', 'mp3', {
+      quality: 2,
+      mode: 'fit',
+      nested: { x: 1, y: 2 }
+    });
+
+    const keyB = computeCacheKey(input, 'audio:mp3', 'mp3', {
+      mode: 'fit',
+      nested: { y: 2, x: 1 },
       quality: 2
     });
+
+    expect(keyA).toBe(keyB);
   });
 
   it('should round-trip cached output', async () => {

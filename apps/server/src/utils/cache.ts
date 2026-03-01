@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { mkdir } from 'fs/promises';
 import * as cacache from 'cacache';
+import stringify from 'safe-stable-stringify';
 import { z } from 'zod';
 import { env } from '~/config/env';
 import { logger } from '~/config/logger';
@@ -28,61 +29,30 @@ interface CacheEntryLike {
   metadata?: unknown;
 }
 
-function normalizeValue(value: unknown): unknown {
-  if (value === undefined || typeof value === 'function' || typeof value === 'symbol') {
-    return undefined;
-  }
-
-  if (value === null || typeof value === 'string' || typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null;
-  }
-
-  if (typeof value === 'bigint') {
-    return value.toString();
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  if (Buffer.isBuffer(value)) {
-    return value.toString('base64');
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => {
-      const normalized = normalizeValue(item);
-      return normalized === undefined ? null : normalized;
-    });
-  }
-
-  if (typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    const normalized: Record<string, unknown> = {};
-
-    for (const key of Object.keys(record).sort()) {
-      if (EXCLUDED_KEYS.has(key)) {
-        continue;
-      }
-
-      const normalizedValue = normalizeValue(record[key]);
-      if (normalizedValue !== undefined) {
-        normalized[key] = normalizedValue;
-      }
-    }
-
-    return normalized;
-  }
-
-  return value;
+function computeFileHash(fileBuffer: Buffer): string {
+  return createHash('sha256').update(fileBuffer).digest('hex');
 }
 
-function stableStringify(value: unknown): string {
-  return JSON.stringify(normalizeValue(value));
+function computeOperationHash(jobType: string, outputExtension: string, params: Record<string, unknown>): string {
+  const operationSignature = stringify({ jobType, outputExtension, params }, (key, value) => {
+    if (EXCLUDED_KEYS.has(key)) {
+      return undefined;
+    }
+
+    if (typeof value === 'number' && !Number.isFinite(value)) {
+      return null;
+    }
+
+    if (typeof value === 'bigint') {
+      return value.toString();
+    }
+
+    return value;
+  });
+
+  return createHash('sha256')
+    .update(operationSignature ?? 'null')
+    .digest('hex');
 }
 
 function isMissingCacheEntryError(error: unknown): boolean {
@@ -137,22 +107,15 @@ export function isCacheEligibleJobData(jobDataResult: Record<string, unknown>): 
   return uploadToS3 !== true;
 }
 
-export function extractCacheableParams(jobDataResult: Record<string, unknown>): Record<string, unknown> {
-  const normalized = normalizeValue(jobDataResult);
-  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) {
-    return {};
-  }
-  return normalized as Record<string, unknown>;
-}
-
-export function computeCacheKey(fileBuffer: Buffer, jobType: string, params: Record<string, unknown>): string {
-  const hash = createHash('sha256');
-  hash.update(fileBuffer);
-  hash.update('\0');
-  hash.update(jobType);
-  hash.update('\0');
-  hash.update(stableStringify(params));
-  return hash.digest('hex');
+export function computeCacheKey(
+  fileBuffer: Buffer,
+  jobType: string,
+  outputExtension: string,
+  params: Record<string, unknown>
+): string {
+  const fileHash = computeFileHash(fileBuffer);
+  const operationHash = computeOperationHash(jobType, outputExtension, params);
+  return `${fileHash}:${operationHash}`;
 }
 
 export async function getCachedOutput(cacheKey: string): Promise<CacheHit | null> {
