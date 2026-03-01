@@ -1,9 +1,26 @@
 import { z } from 'zod';
+import path from 'path';
 
 if (process.env['NODE_ENV'] !== 'production') {
   const dotenv = await import('dotenv');
   dotenv.config();
 }
+
+const EnvBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+  if (['0', 'false', 'no', 'off', ''].includes(normalized)) {
+    return false;
+  }
+
+  return value;
+}, z.boolean());
 
 const schema = z.object({
   PORT: z.coerce.number().default(3000),
@@ -15,8 +32,18 @@ const schema = z.object({
   MAX_FILE_SIZE: z.coerce.number().default(100 * 1024 * 1024),
 
   STORAGE_MODE: z.enum(['stateless', 's3']).default('stateless'),
+  CACHE_ENABLED: EnvBooleanSchema.default(false),
+  CACHE_DIR: z.string().optional(),
+  CACHE_TTL_HOURS: z.coerce.number().int().positive().default(2160),
+  CACHE_MAX_SIZE_MB: z.coerce.number().int().positive().default(1024),
+  CACHE_SWEEP_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
 
   AUTH_TOKEN: z.string().optional()
 });
 
-export const env = schema.parse(process.env);
+const parsedEnv = schema.parse(process.env);
+
+export const env = {
+  ...parsedEnv,
+  CACHE_DIR: parsedEnv.CACHE_DIR ?? path.join(parsedEnv.TEMP_DIR, 'cache')
+};

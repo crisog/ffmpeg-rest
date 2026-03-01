@@ -4,16 +4,23 @@ import { mkdir, writeFile, readFile, rm } from 'fs/promises';
 import path from 'path';
 import { env } from '~/config/env';
 import { addJob, queueEvents, validateJobResult, JobTypeName } from '~/queue';
+import {
+  extractCacheableParams,
+  computeCacheKey,
+  getCachedOutput,
+  putCachedOutput,
+  isCacheEligibleJobData
+} from '~/utils/cache';
 
-export const JobPathsSchema = z.object({
+const JobPathsSchema = z.object({
   inputPath: z.string(),
   outputPath: z.string(),
   jobDir: z.string()
 });
 
-export type JobPaths = z.infer<typeof JobPathsSchema>;
+type JobPaths = z.infer<typeof JobPathsSchema>;
 
-export const ProcessJobOptionsSchema = z.object({
+const ProcessJobOptionsSchema = z.object({
   file: z.file(),
   jobType: z.string() as z.ZodType<JobTypeName>,
   outputExtension: z.string().min(1),
@@ -23,24 +30,20 @@ export const ProcessJobOptionsSchema = z.object({
   })
 });
 
-export type ProcessJobOptions = z.infer<typeof ProcessJobOptionsSchema>;
+type ProcessJobOptions = z.infer<typeof ProcessJobOptionsSchema>;
 
-const SuccessResultSchema = z.object({
-  success: z.literal(true),
-  outputPath: z.string().optional(),
-  outputUrl: z.string().url().optional(),
-  outputBuffer: z.instanceof(Buffer).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional()
-});
-
-const ErrorResultSchema = z.object({
-  success: z.literal(false),
-  error: z.string()
-});
-
-export const ProcessJobResultSchema = z.discriminatedUnion('success', [SuccessResultSchema, ErrorResultSchema]);
-
-export type ProcessJobResult = z.infer<typeof ProcessJobResultSchema>;
+type ProcessJobResult =
+  | {
+      success: true;
+      outputPath?: string;
+      outputUrl?: string;
+      outputBuffer?: Buffer;
+      metadata?: Record<string, unknown>;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export async function processMediaJob(options: ProcessJobOptions): Promise<ProcessJobResult> {
   const validated = ProcessJobOptionsSchema.safeParse(options);
@@ -55,22 +58,36 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
 
   const jobId = randomUUID();
   const jobDir = path.join(env.TEMP_DIR, jobId);
+  const inputPath = path.join(jobDir, 'input');
+  const outputPath = path.join(jobDir, `output.${outputExtension}`);
 
   const cleanup = async () => {
     await rm(jobDir, { recursive: true, force: true });
   };
 
   try {
-    await mkdir(jobDir, { recursive: true });
-
-    const inputPath = path.join(jobDir, 'input');
-    const outputPath = path.join(jobDir, `output.${outputExtension}`);
-
-    const arrayBuffer = await file.arrayBuffer();
-    await writeFile(inputPath, Buffer.from(arrayBuffer));
-
     const paths: JobPaths = { inputPath, outputPath, jobDir };
-    const job = await addJob(jobType, jobData(paths));
+    const payload = jobData(paths);
+
+    const inputBuffer = Buffer.from(await file.arrayBuffer());
+    const canUseCache = env.CACHE_ENABLED && isCacheEligibleJobData(payload);
+    const cacheKey = canUseCache ? computeCacheKey(inputBuffer, jobType, extractCacheableParams(payload)) : null;
+
+    if (cacheKey) {
+      const cached = await getCachedOutput(cacheKey);
+      if (cached) {
+        return {
+          success: true,
+          outputBuffer: cached.outputBuffer,
+          metadata: cached.metadata
+        };
+      }
+    }
+
+    await mkdir(jobDir, { recursive: true });
+    await writeFile(inputPath, inputBuffer);
+
+    const job = await addJob(jobType, payload);
     const rawResult = await job.waitUntilFinished(queueEvents);
     const result = validateJobResult(rawResult);
 
@@ -86,6 +103,11 @@ export async function processMediaJob(options: ProcessJobOptions): Promise<Proce
 
     if (result.outputPath) {
       const outputBuffer = await readFile(result.outputPath);
+
+      if (cacheKey) {
+        await putCachedOutput(cacheKey, outputBuffer, jobType, outputExtension, result.metadata);
+      }
+
       await cleanup();
       return { success: true, outputPath: result.outputPath, outputBuffer, metadata: result.metadata };
     }
