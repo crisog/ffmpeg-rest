@@ -6,22 +6,6 @@ if (process.env['NODE_ENV'] !== 'production') {
   dotenv.config();
 }
 
-const EnvBooleanSchema = z.preprocess((value) => {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
-    return true;
-  }
-  if (['0', 'false', 'no', 'off', ''].includes(normalized)) {
-    return false;
-  }
-
-  return value;
-}, z.boolean());
-
 const schema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -32,7 +16,7 @@ const schema = z.object({
   MAX_FILE_SIZE: z.coerce.number().default(100 * 1024 * 1024),
 
   STORAGE_MODE: z.enum(['stateless', 's3']).default('stateless'),
-  CACHE_ENABLED: EnvBooleanSchema.default(false),
+  CACHE_ENABLED: z.stringbool().default(false),
   CACHE_DIR: z.string().optional(),
   CACHE_TTL_HOURS: z.coerce.number().int().positive().default(2160),
   CACHE_MAX_SIZE_MB: z.coerce.number().int().positive().default(1024),
