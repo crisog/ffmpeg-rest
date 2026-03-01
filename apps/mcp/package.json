@@ -1,0 +1,20 @@
+{
+  "name": "@ffmpeg-rest/mcp",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ffmpeg-mcp": "dist/mcp.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/mcp.ts",
+    "build": "esbuild src/mcp.ts --bundle --sourcemap --platform=node --format=esm --packages=external --outfile=dist/mcp.js && chmod +x dist/mcp.js",
+    "start": "node ./dist/mcp.js",
+    "typecheck": "tsc --noEmit",
+    "test:app": "TEST_MODE=app vitest --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "zod": "^4.1.11"
+  }
+}
